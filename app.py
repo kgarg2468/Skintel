@@ -79,7 +79,7 @@ def main():
         with col1:
             st.subheader("Uploaded Image")
             image = Image.open(uploaded_file)
-            st.image(image, caption=f"Size: {image.size[0]}x{image.size[1]} pixels", use_column_width=True)
+            st.image(image, caption=f"Size: {image.size[0]}x{image.size[1]} pixels", use_container_width=True)
             
             # Image info
             st.write(f"**File size:** {file_size / (1024*1024):.1f} MB")
@@ -126,15 +126,31 @@ def main():
                 st.error("Please try uploading a different image or contact support if the problem persists.")
 
 def display_results(analysis_results, recommendations, preprocessing_info):
-    """Display analysis results and recommendations"""
+    """Display analysis results and recommendations in dashboard style"""
     
     st.success("✅ Analysis Complete!")
     
-    # Analysis Results Section
-    st.header("📊 Analysis Results")
+    # Get top finding for summary banner
+    sorted_conditions = sorted(analysis_results.items(), key=lambda x: x[1]['confidence'], reverse=True)
+    top_condition, top_data = sorted_conditions[0]
     
-    # Preprocessing summary
-    with st.expander("🔧 Image Processing Summary", expanded=False):
+    # TOP-LEVEL SUMMARY BANNER
+    display_summary_banner(top_condition, top_data)
+    
+    st.divider()
+    
+    # CONDITION DASHBOARD TILES
+    st.header("🔍 Health Insights Dashboard")
+    display_condition_dashboard(sorted_conditions)
+    
+    st.divider()
+    
+    # ACTION CATEGORIES
+    st.header("💡 Your Action Plan")
+    display_action_categories(recommendations)
+    
+    # Processing info (collapsed by default)
+    with st.expander("🔧 Processing Details", expanded=False):
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Original Size", f"{preprocessing_info['original_size'][0]}x{preprocessing_info['original_size'][1]}")
@@ -142,72 +158,224 @@ def display_results(analysis_results, recommendations, preprocessing_info):
             st.metric("Processed Size", f"{preprocessing_info['processed_size'][0]}x{preprocessing_info['processed_size'][1]}")
         with col3:
             st.metric("Skin Coverage", f"{preprocessing_info['skin_coverage']:.1f}%")
+
+def display_summary_banner(condition, data):
+    """Display prominent summary banner with key insight"""
+    confidence = data['confidence']
+    risk_level = data['risk_level']
     
-    # Detected conditions
-    st.subheader("🔍 Detected Skin Conditions")
+    # Determine banner style based on risk level
+    if risk_level == "High":
+        banner_color = "#ffebee"  # Light red
+        icon = "⚠️"
+        border_color = "#f44336"  # Red
+    elif risk_level == "Medium":
+        banner_color = "#fff8e1"  # Light orange
+        icon = "🟡"
+        border_color = "#ff9800"  # Orange
+    else:
+        banner_color = "#e8f5e8"  # Light green
+        icon = "✅"
+        border_color = "#4caf50"  # Green
     
-    # Sort conditions by confidence score
-    sorted_conditions = sorted(analysis_results.items(), key=lambda x: x[1]['confidence'], reverse=True)
+    # Create concise message
+    if "Acanthosis" in condition:
+        message = f"High Insulin Risk Detected – Cut Added Sugars"
+        action = "Focus on low-sugar diet and exercise"
+    elif "Xanthelasma" in condition:
+        message = f"Cholesterol Deposits Found – Heart Health Priority"
+        action = "Schedule lipid panel and adopt heart-healthy diet"
+    elif "Dry" in condition:
+        message = f"Skin Dehydration Detected – Boost Hydration"
+        action = "Increase water intake and use moisturizer"
+    elif "Inflammatory" in condition:
+        message = f"Skin Inflammation Present – Reduce Irritants"
+        action = "See dermatologist and avoid triggers"
+    elif "Seborrheic" in condition:
+        message = f"Skin Condition Detected – Manage Stress"
+        action = "Use gentle products and reduce stress"
+    else:
+        message = f"Sun Damage Detected – Protect Your Skin"
+        action = "Daily SPF and regular skin checks"
     
-    for condition, data in sorted_conditions:
-        confidence = data['confidence']
-        description = data['description']
-        risk_level = data['risk_level']
+    # Display banner
+    st.markdown(f"""
+    <div style="
+        background-color: {banner_color};
+        border-left: 5px solid {border_color};
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    ">
+        <h2 style="margin: 0; color: #1f1f1f;">
+            {icon} {message}
+        </h2>
+        <p style="margin: 10px 0 0 0; color: #666; font-size: 16px;">
+            {action} • Confidence: {confidence}%
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def display_condition_dashboard(sorted_conditions):
+    """Display condition cards in dashboard layout"""
+    
+    # Limit to top 6 conditions to avoid overwhelming
+    display_conditions = sorted_conditions[:6]
+    
+    # Create grid layout - 2 columns on desktop, 1 on mobile
+    cols = st.columns(2)
+    
+    for idx, (condition, data) in enumerate(display_conditions):
+        col = cols[idx % 2]
         
-        # Color code based on risk level
-        if risk_level == "High":
-            color = "🔴"
-        elif risk_level == "Medium":
-            color = "🟡"
-        else:
-            color = "🟢"
+        with col:
+            create_condition_card(condition, data)
+
+def create_condition_card(condition, data):
+    """Create individual condition card with progress ring"""
+    confidence = data['confidence']
+    risk_level = data['risk_level']
+    description = data['description']
+    
+    # Get condition-specific icon and colors
+    if "Acanthosis" in condition:
+        icon = "🩸"
+        card_title = "Insulin Resistance"
+    elif "Xanthelasma" in condition:
+        icon = "💛"
+        card_title = "Cholesterol Deposits"
+    elif "Dry" in condition:
+        icon = "💧"
+        card_title = "Skin Dehydration"
+    elif "Inflammatory" in condition:
+        icon = "🔥"
+        card_title = "Inflammation"
+    elif "Seborrheic" in condition:
+        icon = "🧴"
+        card_title = "Seborrheic Dermatitis"
+    else:
+        icon = "☀️"
+        card_title = "Sun Damage"
+    
+    # Risk level colors
+    if risk_level == "High":
+        color = "#f44336"  # Red
+        bg_color = "#ffebee"
+    elif risk_level == "Medium":
+        color = "#ff9800"  # Orange
+        bg_color = "#fff8e1"
+    else:
+        color = "#4caf50"  # Green
+        bg_color = "#e8f5e8"
+    
+    # Create expandable card
+    with st.container():
+        # Card header
+        st.markdown(f"""
+        <div style="
+            background-color: {bg_color};
+            border: 2px solid {color};
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+        ">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 24px; margin-right: 12px;">{icon}</span>
+                <h3 style="margin: 0; color: #1f1f1f;">{card_title}</h3>
+            </div>
+            <div style="margin: 8px 0;">
+                <div style="
+                    background-color: #f0f0f0;
+                    border-radius: 10px;
+                    height: 8px;
+                    overflow: hidden;
+                ">
+                    <div style="
+                        background-color: {color};
+                        height: 100%;
+                        width: {confidence}%;
+                        transition: width 0.3s ease;
+                    "></div>
+                </div>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
+                    {confidence}% confidence • {risk_level} priority
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Display condition card
-        with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
-            
-            with col1:
-                st.write(f"{color} **{condition}**")
-                st.write(f"*{description}*")
-            
-            with col2:
-                st.metric("Confidence", f"{confidence}%")
-            
-            with col3:
-                st.write(f"Risk: **{risk_level}**")
-            
-            st.divider()
+        # Expandable details
+        with st.expander(f"Learn more about {card_title}", expanded=False):
+            st.write(f"**Description:** {description}")
+            if 'detected_features' in data:
+                st.write("**Key indicators detected:**")
+                for feature, value in data['detected_features'].items():
+                    st.write(f"• {feature.replace('_', ' ').title()}: {value}")
+
+def display_action_categories(recommendations):
+    """Display action categories with touch-friendly tiles"""
     
-    # Recommendations Section
-    st.header("💡 Personalized Recommendations")
+    # Create three columns for action categories
+    col1, col2, col3 = st.columns(3)
     
-    tab1, tab2, tab3 = st.tabs(["🏃 Lifestyle", "🥗 Diet", "🏥 Medical"])
+    with col1:
+        st.markdown("### 🍎 Diet")
+        create_action_tiles(recommendations['diet'], "diet")
     
-    with tab1:
-        st.subheader("Lifestyle Recommendations")
-        for rec in recommendations['lifestyle']:
-            st.write(f"• {rec}")
+    with col2:
+        st.markdown("### 🏃 Lifestyle")
+        create_action_tiles(recommendations['lifestyle'], "lifestyle")
     
-    with tab2:
-        st.subheader("Dietary Recommendations")
-        for rec in recommendations['diet']:
-            st.write(f"• {rec}")
+    with col3:
+        st.markdown("### 🩺 Medical")
+        create_action_tiles(recommendations['medical'], "medical")
     
-    with tab3:
-        st.subheader("Medical Recommendations")
-        for rec in recommendations['medical']:
-            st.write(f"• {rec}")
-    
-    # Action items
+    # Action items section
     if recommendations.get('action_items'):
-        st.header("📋 Recommended Action Items")
+        st.markdown("### 📋 Priority Actions")
         for i, item in enumerate(recommendations['action_items'], 1):
-            st.write(f"{i}. {item}")
+            st.markdown(f"""
+            <div style="
+                background-color: #e3f2fd;
+                border-left: 4px solid #2196f3;
+                padding: 12px;
+                margin: 8px 0;
+                border-radius: 4px;
+            ">
+                <strong>{i}.</strong> {item}
+            </div>
+            """, unsafe_allow_html=True)
+
+def create_action_tiles(recommendations, category):
+    """Create action tiles for each category"""
     
-    # Download report option
-    st.header("📥 Export Report")
-    if st.button("Generate PDF Report", type="secondary"):
-        st.info("PDF generation feature will be available in a future update. For now, you can screenshot or print this page.")
+    # Color scheme for categories
+    colors = {
+        'diet': '#4caf50',      # Green
+        'lifestyle': '#2196f3', # Blue
+        'medical': '#f44336'    # Red
+    }
+    
+    color = colors.get(category, '#666')
+    
+    # Display top recommendations as tiles
+    for rec in recommendations[:3]:  # Limit to top 3 per category
+        st.markdown(f"""
+        <div style="
+            background-color: white;
+            border: 2px solid {color};
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        " onmouseover="this.style.backgroundColor='#f5f5f5'" 
+           onmouseout="this.style.backgroundColor='white'">
+            <p style="margin: 0; font-size: 14px; color: #333;">
+                {rec}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
