@@ -1,6 +1,6 @@
 # Skintel - AI-Powered Skin Health Analysis
 
-Skintel is an advanced AI-powered web application that analyzes skin photos to detect potential health biomarkers and provides personalized health recommendations. Using computer vision and machine learning, Skintel can identify visual indicators of systemic conditions like insulin resistance, cholesterol deposits, dehydration, and inflammatory conditions.
+Skintel is an AI-powered web application designed to make skin health insights accessible to everyone. Growing up in India, I remember how many people were unsure whether a skin issue was harmless or a sign of something deeper. Skintel aims to solve that problem. Using computer vision and machine learning, it analyzes skin photos to detect visual biomarkers of systemic health conditions such as insulin resistance, cholesterol buildup, dehydration, and inflammation. It provides personalized, evidence-based recommendations to help users take informed action, no specialist required.
 
 ## Medical Disclaimer
 
