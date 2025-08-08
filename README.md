@@ -200,44 +200,6 @@ Skintel's analysis is based on peer-reviewed dermatological research:
 
 ## Configuration
 
-### Streamlit Configuration (`.streamlit/config.toml`)
-```toml
-[server]
-headless = true
-address = "0.0.0.0"
-port = 5000
-
-[theme]
-primaryColor = "#FF6B6B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
-```
-
-### Environment Variables
-```bash
-DATABASE_URL=postgresql://user:password@host:port/database
-PGHOST=localhost
-PGPORT=5432
-PGUSER=skintel_user
-PGPASSWORD=secure_password
-PGDATABASE=skintel_db
-```
-
-## Deployment
-
-### Replit Deployment
-1. Fork the project on Replit
-2. Configure environment variables in Replit Secrets
-3. Click "Run" to start the application
-4. Use Replit's deployment feature for production
-
-### Local Production
-1. Set up reverse proxy (nginx recommended)
-2. Configure SSL certificates
-3. Set production environment variables
-4. Use process manager (PM2, systemd)
-
 ### Docker Deployment (Optional)
 ```dockerfile
 FROM python:3.11-slim
